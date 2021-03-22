@@ -2,11 +2,15 @@ package main
 
 import (
 	"bytes"
+	"encoding/binary"
+
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
+	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -22,7 +26,7 @@ var server_name string = "Server01"
 var timeout = 6 * time.Second
 
 var wg sync.WaitGroup
-var new_wordcount2 map[string]int
+
 
 func healthCheck(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusOK)
@@ -254,6 +258,19 @@ func findleader() string {
 
 }
 
+type Pair struct {
+	Key   string
+	Value int
+}
+
+type PairList []Pair
+
+
+func (p PairList) Len() int           { return len(p) }
+func (p PairList) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+func (p PairList) Less(i, j int) bool { return p[i].Value < p[j].Value }
+
+
 func parseRequest(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	body, err := ioutil.ReadAll(r.Body)
@@ -265,16 +282,16 @@ func parseRequest(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-
 	if newRequest.Type == "response" {
 
 		response := wordCount(newRequest.Sentence)
-
 		responseBytes, _ := json.Marshal(response)
 		w.Write(responseBytes)
 
 	} else if newRequest.Type == "request" {
 		finalresp := sendRequest(newRequest)
+	//	fmt.Println("+++++++++++++++++++++")
+	//	fmt.Println(string(finalresp))
 		w.Write(finalresp)
 	} else {
 		w.Write([]byte("400 Bad Request. Please choose between response or request"))
@@ -282,7 +299,7 @@ func parseRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func parseLeaderRequest(w http.ResponseWriter, r *http.Request) {
-	new_wordcount2 = make(map[string]int)
+	//new_wordcount2 := make(map[string][]byte)
 	w.Header().Set("Content-Type", "application/json")
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -295,21 +312,69 @@ func parseLeaderRequest(w http.ResponseWriter, r *http.Request) {
 	}
 	serverlstt := newResp.Servers
 	data_arr := newResp.Array
-	
+	FinalMap := make(map[string]int)
+	//var finalResponse data
 	if newResp.Type == "response" {
 		dataCounter := 1
 		for sname, svalue := range serverlstt {
 			response := makeRequest(svalue, data_arr,dataCounter)
-			fmt.Println(sname+" Processed "+string(len(response))+" chunkes of bytes!")
-			
+			dataCounter++
+			fmt.Println(sname+" Processed "+strconv.Itoa(binary.Size(response))+" chunkes of bytes!")
+			var newResponse data
+			json.Unmarshal(response,&newResponse)
+			p := make(PairList, len(newResponse.WordCounter))
+			i := 0
+	for k, v := range newResponse.WordCounter {
+		p[i] = Pair{k, v}
+		i++
+	}
+
+	
+	sort.Sort(p)
+	//p is sorted
+	for _, k := range p {
+		val,ok := FinalMap[k.Key]
+		 if !ok{
+			 FinalMap[k.Key] = k.Value
+		 }else {
+			 
+			 new_value := val+k.Value
+			 FinalMap[k.Key] = new_value
 
 		}
+       
+    }
+	}
 	} else {
 		w.Write([]byte("400 Bad Request. Please choose between response or request"))
 	}
-
+	FinalMap2 := rankByWordCount(FinalMap)
+	//Maxmap := make(map[string]int)
+	//min_counter := 5
+	fmt.Println(FinalMap2)
+	TempData, err := json.Marshal(FinalMap2)   
+    if err != nil {
+        fmt.Println(err.Error())
+        return
+    }
+	
+	if err != nil {
+		fmt.Println("error occured")
+	}
+	w.Write(TempData)
 }
 
+func rankByWordCount(wordFrequencies map[string]int) PairList{
+	pl := make(PairList, len(wordFrequencies))
+	i := 0
+	for k, v := range wordFrequencies {
+	  pl[i] = Pair{k, v}
+	  i++
+	}
+	sort.Sort(sort.Reverse(pl))
+	return pl
+  }
+  
 
 
  
@@ -331,14 +396,12 @@ func makeRequest(severaddress string, array map[int]string,counter int)[]byte {
 
 		fmt.Println("error hititng the leader. Line number 359", re)
 
+		
 	}
 	body, _ := ioutil.ReadAll(resp.Body)
 	
 	return body
 
-
-	
-	
 }
 
 
