@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"container/heap"
 	"encoding/binary"
 
 	"encoding/json"
@@ -9,6 +10,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+
 	"sort"
 	"strconv"
 	"strings"
@@ -17,19 +19,6 @@ import (
 
 	"github.com/hashicorp/consul/api"
 )
-//  XSend this json request to localhost:9000/wordcount endpoint using postman
-//{
- //   "type": "request",
- //   "sentence": "Hello World India is the best India America America India food cat ball india " 
-//}
-//
-//
-//
-//
-//
-
-
-
 
 
 var port string = ":9000"
@@ -38,7 +27,8 @@ var consul_port string = ":80"
 var consul_api_port string = ":8080"
 var server_name string = "Server01"
 var timeout = 6 * time.Second
-
+const max_words int = 5
+const min_words int = 5
 var wg sync.WaitGroup
 
 
@@ -67,6 +57,11 @@ type data struct {
 type leader struct {
 	Session string `json:"session"`
 	Leader  string `json:"server"`
+}
+
+type MinMax struct {
+	Min [min_words]string `json:"min"`
+	Max [max_words]string `json:"max"`
 }
 
 func wordCount(str string) data {
@@ -284,6 +279,37 @@ func (p PairList) Len() int           { return len(p) }
 func (p PairList) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 func (p PairList) Less(i, j int) bool { return p[i].Value < p[j].Value }
 
+func getHeap(m map[string]int) *KVHeap {
+	h := &KVHeap{}
+	heap.Init(h)
+	for k, v := range m {
+	  heap.Push(h, kv{k, v})
+	}
+	return h
+  }
+  type kv struct {
+	Key   string
+	Value int
+}
+  // See https://golang.org/pkg/container/heap/
+  type KVHeap []kv
+  
+  // Note that "Less" is greater-than here so we can pop *larger* items.
+  func (h KVHeap) Less(i, j int) bool { return h[i].Value > h[j].Value }
+  func (h KVHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+  func (h KVHeap) Len() int           { return len(h) }
+  
+  func (h *KVHeap) Push(x interface{}) {
+	*h = append(*h, x.(kv))
+  }
+  
+  func (h *KVHeap) Pop() interface{} {
+	old := *h
+	n := len(old)
+	x := old[n-1]
+	*h = old[0 : n-1]
+	return x
+  }
 
 func parseRequest(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -363,20 +389,63 @@ func parseLeaderRequest(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("400 Bad Request. Please choose between response or request"))
 	}
 	FinalMap2 := rankByWordCount(FinalMap)
-	//Maxmap := make(map[string]int)
-	//min_counter := 5
-	fmt.Println(FinalMap2)
-	TempData, err := json.Marshal(FinalMap2)   
-    if err != nil {
-        fmt.Println(err.Error())
-        return
-    }
-	
-	if err != nil {
-		fmt.Println("error occured")
+	Maxmap := make(map[string]int)
+	for _,v := range FinalMap2{
+		Maxmap[v.Key] = v.Value
 	}
-	w.Write(TempData)
+	
+	h := getHeap(Maxmap)
+
+// 	for _, key := range dMap.MapKeys() {
+// 	  val := dMap.MapIndex(key)
+// 	  fmt.Println("Printing values")
+// 	  fmt.Println(val)
+//   }
+
+
+	var maxArray [max_words]string
+	
+	for i := 1; i <= max_words; i++ {
+
+	  max1 := fmt.Sprintf("%#v", heap.Pop(h))
+	  max1 = strings.Replace(max1,"main.kv{Key:","",-1)
+	  max1 = strings.Replace(max1,", Value:","",-1)
+	  max1 = strings.Replace(max1,"}","",-1)
+	  max1 = strings.Replace(max1,"\""," ",-1)
+	  max1 = strings.Replace(max1," ",":",-1)
+	  max1 = strings.Replace(max1,":","",1)
+	  
+	  
+	//f := strings.Split(max1," ")
+	
+	maxArray[i-1] = max1
+	}
+	var minArray [min_words]string
+	MinMap := rankByWordCount(Maxmap)
+	counter := 0
+	min_counter := 0
+	for _,j := range MinMap {
+		counter++
+		if counter > len(MinMap) - min_words {
+			stringf := j.Key + ":" + strconv.Itoa(j.Value)
+			minArray[min_counter] = stringf
+			min_counter++
+
+		}
+
+	}
+	var minmax MinMax
+	minmax.Min = minArray
+	minmax.Max = maxArray
+	
+
+	y,_ := json.Marshal(minmax)
+	
+	w.Write(y)
 }
+
+
+
 
 func rankByWordCount(wordFrequencies map[string]int) PairList{
 	pl := make(PairList, len(wordFrequencies))
@@ -388,6 +457,7 @@ func rankByWordCount(wordFrequencies map[string]int) PairList{
 	sort.Sort(sort.Reverse(pl))
 	return pl
   }
+  
   
 
 
