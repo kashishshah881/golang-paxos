@@ -17,6 +17,20 @@ import (
 
 	"github.com/hashicorp/consul/api"
 )
+//  XSend this json request to localhost:9000/wordcount endpoint using postman
+//{
+ //   "type": "request",
+ //   "sentence": "Hello World India is the best India America America India food cat ball india " 
+//}
+//
+//
+//
+//
+//
+
+
+
+
 
 var port string = ":9000"
 var consul_host string = "http://34.122.227.175"
@@ -396,7 +410,7 @@ func makeRequest(severaddress string, array map[int]string,counter int)[]byte {
 
 		fmt.Println("error hititng the leader. Line number 359", re)
 
-		
+
 	}
 	body, _ := ioutil.ReadAll(resp.Body)
 	
