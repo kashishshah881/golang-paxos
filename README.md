@@ -32,7 +32,7 @@ Once all the servers have given back the wordcount, it will compile all the resp
 1. Server Setup:
     1. Inside each folder i.e Leadership,Leadership2,Leadership3,Leadership4
     2. Run ``` go run main.go ```<br>
-Note: By default Leadership,Leadership2,Leadership3,Leadership4 will run on port 8000,8001,8002,8003 respectively. <br>
+Note: By default Leadership,Leadership2,Leadership3,Leadership4 will run on port 8000,8001,8002,8003 respectively.
 2. Client Setup:
     1. Run ```chmod +x main.py```
     2. Run ```./main.py -p <port> -host <hostname> -f <file .txt> ``` or ```./main.py -h``` to see the help menu <br>
@@ -40,7 +40,27 @@ Note: By default Leadership,Leadership2,Leadership3,Leadership4 will run on port
 
 
 ### Creating more servers
-Essentially ```main.go``` in leadership[n] folders is the same. Just change the port number while running it. So it can run as a seperate process.
+Essentially ```main.go``` in leadership[n] folders is the same. <br>
+You can configure the ```port``` , ```consul_host``` , ```consul_port``` , ```consul_api_port```, ```server_name```
+#### Configuration
+
+Argument | Value
+------------ | -------------
+```port``` | :<port> (*Unique*)
+```consul_host ``` | http://```<consul-host-ip> ```
+``` consul_port ``` | :```<port>``` (*Defaults to ```:8080```*)
+``` consul_api_port ```| : ```<port>``` (*Defaults to ```:80```*)
+``` server_name ```| Server_name (*Unique* with **no** spaces)
+
+#### Steps:
+Run these in each folder:
+1. ``` go build main.go ```
+2. ``` ./main -p <port> -consul_host <consul_host> -consul_port <consul_port> -consul_api_port <consul_api_port> -server_name <server_name> ```
+
+
+
+    
+
 
 
 
