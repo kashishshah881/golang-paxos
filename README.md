@@ -1,7 +1,32 @@
 ## Distributed Golang Wordcount Server
+### Introduction
+This project illustrates multithreaded distributive approach for wordcount across multiple Golang servers. 
+### Desciption
+For this project we use Go servers , Consul , Python script. There are 3 threads in this project:
+1. First thread in the Go servers is trying to acquire the lock. The "lock" refers to key-value pair in Consul which only one server can hold. You can read more about it [here.](https://www.consul.io/commands/lock)
+2. Second thread keeps a check on the healthy webservers in the system at any given point of time.
+3. Third Thread is the webserver which waits for the client/leader to send the sentences. 
+
+Consul provides a key-value store with ```lock``` capabilities. Each webserver tries to acquire lock for a specific period of time and releases the lock. Till the time that webserver has the lock it is considered the leader. The functions of the leader are accept incoming request from the client , divide the words by the number of servers that are online and send each server with the words. 
+Each server then counts the number of words back to the leader and then the leader once all the words are received counts the words, finds the maximum and minimum number of words and sends it back to the client. 
+<br>
+<br>
+*Its always easier to understand it with an example:*
+Suppose there are 4 servers: ```server01```,```server02```,```server03```,```server04```. These servers are trying to acquire the lock. <br>
+For this example consider the leader to be ```server02``` <br>
+When the client sends a ```POST``` request to any of one of the server. Suppose ```server01```, So ```server01``` will try to find the current leader looking at the value of  the ```lock key```  in Consul. As we know the current leader is ```server02```, ```server01``` will send the request to ```server02``` <br>
+Now, ```server02``` will break the words in four parts (since there are 4 servers) and send each server with the request for the wordcount. <br>
+Once all the servers have given back the wordcount, it will compile all the responses and send back the ```max``` and ```min``` to ```server01``` which will respond back to the ```client```
+*Its even more easier to understand when you see the implementation*
+
+
+
+
+
 ### Requirements
 1. Go ```v1.16```
-2. Python3
+2. ```Python 3```
+3. Consul
 ### Steps to run:
 1. Server Setup:
     1. Inside each folder i.e Leadership,Leadership2,Leadership3,Leadership4
