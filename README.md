@@ -1,6 +1,6 @@
 ## Distributed Golang Wordcount Server
 ### Introduction
-This project illustrates multithreaded distributive approach for wordcount across multiple Golang servers. 
+This project illustrates multithreaded distributive approach for wordcount across multiple Golang servers. See [Demo.](#Demo)
 ### Desciption
 For this project we use Go servers , Consul , Python script. There are 3 threads in this project:
 1. First thread in the Go servers is trying to acquire the lock. The "lock" refers to key-value pair in Consul which only one server can hold. You can read more about it [here.](https://www.consul.io/commands/lock)
