@@ -11,16 +11,17 @@ Consul provides a key-value store with ```lock``` capabilities. Each webserver t
 Each server then counts the number of words back to the leader and then the leader once all the words are received counts the words, finds the maximum and minimum number of words and sends it back to the client. 
 <br>
 <br>
-*Its always easier to understand it with an example:*
+*Its always easier to understand it with an example:* <br>
 Suppose there are 4 servers: ```server01```,```server02```,```server03```,```server04```. These servers are trying to acquire the lock. <br>
 For this example consider the leader to be ```server02``` <br>
 When the client sends a ```POST``` request to any of one of the server. Suppose ```server01```, So ```server01``` will try to find the current leader looking at the value of  the ```lock key```  in Consul. As we know the current leader is ```server02```, ```server01``` will send the request to ```server02``` <br>
 Now, ```server02``` will break the words in four parts (since there are 4 servers) and send each server with the request for the wordcount. <br>
-Once all the servers have given back the wordcount, it will compile all the responses and send back the ```max``` and ```min``` to ```server01``` which will respond back to the ```client```
-*Its even more easier to understand when you see the implementation*
+Once all the servers have given back the wordcount, it will compile all the responses and send back the ```max``` and ```min``` to ```server01``` which will respond back to the ```client``` <br>
+### Demo
+*Its even more easier to understand when you see the implementation*<br>
+![Golang Paxos Demo](img/paxos.gif)
 
-
-
+<br>
 
 
 ### Requirements
