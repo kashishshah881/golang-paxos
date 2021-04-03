@@ -17,6 +17,9 @@ jobs:
       uses: actions/setup-go@v2
       with:
         go-version: 1.16
+        
+    - name: Creating Mod file
+      run: cd ../leadership && go mod init
 
     - name: Building Go repo
       run: go build -v ../leadership/main.go
