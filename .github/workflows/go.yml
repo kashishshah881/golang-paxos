@@ -18,8 +18,9 @@ jobs:
       with:
         go-version: 1.16
 
-    - name: Build
-      run: go build -v ./...
+    - name: Building Go repo
+      run: go build -v ../leadership/main.go
 
-    - name: Test
-      run: go test -v ./...
+    - name: Testing the build
+      run: go run ../leadership/main.go
+      
