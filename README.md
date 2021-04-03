@@ -46,7 +46,7 @@ You can configure the ```port``` , ```consul_host``` , ```consul_port``` , ```co
 
 Argument | Value
 ------------ | -------------
-```port``` | :``<port>``` (*Unique*)
+```port``` | :```<port>``` (*Unique*)
 ```consul_host ``` | http://```<consul-host-ip> ```
 ``` consul_port ``` | :```<port>``` (*Defaults to ```:8080```*)
 ``` consul_api_port ```| : ```<port>``` (*Defaults to ```:80```*)
