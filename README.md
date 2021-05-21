@@ -21,7 +21,7 @@ Once all the servers have given back the wordcount, it will compile all the resp
 *Its even more easier to understand when you see the implementation*<br>
 ![Golang Paxos Demo](img/paxos.gif) 
 <br>
-Complete Video: ![Here](https://youtu.be/pxkfp4v-DWQ)
+Complete Video: [Here](https://youtu.be/pxkfp4v-DWQ)
 <br>
 
 
