@@ -19,8 +19,9 @@ Now, ```server02``` will break the words in four parts (since there are 4 server
 Once all the servers have given back the wordcount, it will compile all the responses and send back the ```max``` and ```min``` to ```server01``` which will respond back to the ```client``` <br>
 ### Demo
 *Its even more easier to understand when you see the implementation*<br>
-![Golang Paxos Demo](img/paxos.gif)
-
+![Golang Paxos Demo](img/paxos.gif) 
+<br>
+Complete Video: ![Here](https://youtu.be/pxkfp4v-DWQ)
 <br>
 
 
